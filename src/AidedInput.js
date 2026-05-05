@@ -12,41 +12,131 @@ export class AidedInput extends LitElement {
         super(...arguments);
         this.label = 'Models:';
         this.name = 'field';
-        this.placeholder = 'Start typing to see the suggestions';
+        this.placeholder = '...Start typing to see the suggestions';
         this.suggestions = [];
         this.longCaptions = true;
         this.selected = [];
+        this.mode = 'replace';
+        this.strict = false;
+        this.handleChange = (e) => {
+            let value = e.target.value;
+            if (value) {
+                this.selectItem(value);
+                e.target.value = '';
+            }
+        };
+        this.handleKey = (e) => {
+            switch (e.key) {
+                case "Enter":
+                    if (e.target.value) {
+                        this.selectItem(e.target.value);
+                        e.target.value = '';
+                    }
+                    break;
+                case "Backspace":
+                    if (e.target.value == '' && this.selected.length) {
+                        e.preventDefault();
+                        this.deselectItem(this.selected.length - 1);
+                    }
+                    break;
+                default:
+            }
+        };
     }
-    // @query('input#input')
-    // input!: HTMLInputElement;
     static get styles() {
         return [
             global,
             colorsVars,
             buttons,
             css `
+        :host {
+          display: inline-block;
+          padding: 0.5em;
+          border-bottom: solid 1px black;
+        }
         .input,
         .item,
-        .item button {
+        .item {
           display: inline-block;
+          border-radius: 0.5em;
+        }
+        .item button {
+          display: none;
+          padding: 0 .3em 0 .3em;
+          margin: 0;
+        }
+        .item:hover button {
+          display: initial;
+        }
+        .input:has( + input:placeholder-shown ) {
+          .item:last-child {
+            outline: solid 0.5px rgba(255,0,0,0.3);
+          }
+        }
+        input {
+          border: none;
+          background: none;
         }
       `,
         ];
+    }
+    announceChange() {
+        this.dispatchEvent(new CustomEvent("aided-change", {
+            bubbles: true,
+            composed: true,
+            cancelable: true,
+            detail: this.selected
+        }));
+    }
+    announceInput(e) {
+        this.dispatchEvent(new CustomEvent("aided-input", {
+            bubbles: true,
+            composed: true,
+            cancelable: true,
+            detail: e.target.value
+        }));
+    }
+    selectItem(selected) {
+        let suggestion;
+        if (typeof selected == 'number') {
+            suggestion = this.suggestions[selected];
+        }
+        else {
+            if (typeof selected == "string") {
+                suggestion = this.suggestions.find(item => item.name.startsWith(selected))
+                    || (this.strict
+                        ? undefined
+                        : { name: selected, value: selected });
+            }
+            else
+                suggestion = selected;
+        }
+        if (suggestion) {
+            if (this.mode == 'append') {
+                this.selected = [...this.selected, suggestion];
+            }
+            else {
+                this.selected = [suggestion];
+            }
+            this.announceChange();
+        }
+    }
+    deselectItem(index) {
+        this.selected = this.selected.filter((_i, i) => i !== index);
+        this.announceChange();
     }
     render() {
         return html `
       <label for="input">${this.label}</label>
       <!-- Here go already selected items //-->
       <div class="input" role="list" id="selected">
-        ${this.selected.map(id => html `
+        ${this.selected.map((item, id) => html `
             <span class="item" role="listitem">
-              ${this.suggestions
-            .filter(m => m.id === id)[0]
-            .caption(this.longCaptions)}
+              ${item.name}
               <button
                 class="delete"
                 @click=${() => {
-            this.selected = this.selected.filter(i => i !== id);
+            this.deselectItem(id);
         }}
                 aria-label="Remove"
               >
@@ -64,18 +154,16 @@ export class AidedInput extends LitElement {
         list="suggestions-list"
         id="input"
         name="${this.name}"
-        @change=${(event) => {
-            const input = event.target;
-            this.selected = [...this.selected, parseInt(input.value, 10)];
-            input.value = '';
-        }}
+        autocomplete=off
+        @keydown=${this.handleKey}
+        @change=${this.handleChange}
+        @input=${this.announceInput}
       />
 
       <datalist id="suggestions-list">
         ${this.suggestions
-            .filter(m => !!m.id && !this.selected.includes(m.id))
-            .map(m => html `<option .value="${`${m.id}`}">
-                ${m.caption(this.longCaptions)}
+            .map((item, _id) => html `<option .value=${item.value}>
+                ${item.name}
               </option>`)}
       </datalist>
     `;
@@ -99,3 +187,9 @@ __decorate([
 __decorate([
     property({ type: Array })
 ], AidedInput.prototype, "selected", void 0);
+__decorate([
+    property({ type: String })
+], AidedInput.prototype, "mode", void 0);
+__decorate([
+    property({ type: Boolean })
+], AidedInput.prototype, "strict", void 0);

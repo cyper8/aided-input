@@ -1,2 +1,1 @@
-export { AidedInput } from './AidedInput.js';
-export { type Model, type Record } from "./Model.js";
+export { AidedInput, type SuggestionItem, type AidedInputInputEvent, type AidedInputChangeEvent } from './AidedInput.js';

@@ -31,6 +31,13 @@ export const buttons = css`
     padding: 0.5em;
     margin: 0.5em;
     list-style-type: none;
+    animation: width ease-out 0.5s, 
+                height ease-out 0.5s, 
+                background-color ease-out 0.5s,
+                left ease-out 0.5s,
+                top ease-out 0.5s,
+                right ease-out 0.5s,
+                bottom ease-out 0.5s;
   }
   button[disabled],
   .button[disabled] {

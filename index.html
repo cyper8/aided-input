@@ -11,24 +11,21 @@
   </head>
 
   <body>
-    <div id="demo"></div>
+    <div id="demo">
+      <aided-input id="input" strict mode="append" label="TestModels:" placeholder="start typing"></aided-input>
+    </div>
+    <div id="out"></div>
 
     <script type="module">
-      import { html, render } from 'lit';
-      import { testModels } from './test/TestModel.js';
+      import { tests } from './test/TestItems.js';
       import './src/aided-input.js';
+      let input = document.getElementById("input");
+      input.suggestions = tests;
+      input.addEventListener("aided-change", (e) => {
+        document.getElementById("out").textContent = JSON.stringify(e.target.selected);
+        input.suggestions = tests;
+      })
 
-      render(
-        html`
-        <aided-input
-        label="TestModels:"
-        placeholder="start typing"
-        .suggestions=${testModels}>
-
-        </aided-input>
-      `,
-        document.querySelector('#demo')
-      );
     </script>
   </body>
 
