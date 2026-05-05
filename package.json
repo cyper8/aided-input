@@ -3,7 +3,7 @@
   "description": "Webcomponent aided-input following open-wc recommendations",
   "license": "MIT",
   "author": "aided-input",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "main": "./src/index.js",
   "module": "./src/index.js",
   "type": "module",
